@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-time Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #chat {
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+    }
+    #messages {
+      list-style-type: none;
+      padding: 0;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    #messages li {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    #messages li:last-child {
+      border-bottom: none;
+    }
+    #username,
+    #message {
+      width: calc(100% - 40px);
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    #send-button {
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    #send-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat">
+    <ul id="messages"></ul>
+    <input id="username" placeholder="Enter your username" autocomplete="off">
+    <input id="message" placeholder="Enter your message" autocomplete="off">
+    <button id="send-button" onclick="sendMessage()">Send</button>
+  </div>
+  <script>
+    const ws = new WebSocket('ws://localhost:3000');
+    const messages = document.getElementById('messages');
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      const li = document.createElement('li');
+      li.textContent = `[${new Date(message.timestamp).toLocaleTimeString()}] ${message.username}: ${message.message}`;
+      messages.appendChild(li);
+      messages.scrollTop = messages.scrollHeight; // Scroll to the bottom
+    };
+
+    function sendMessage() {
+      const username = document.getElementById('username').value.trim();
+      const message = document.getElementById('message').value.trim();
+
+      if (username && message) {
+        ws.send(JSON.stringify({ username, message }));
+        document.getElementById('message').value = ''; // Clear the message input
+        document.getElementById('message').focus(); // Focus the message input
+      } else {
+        alert('Please enter both a username and a message.');
+      }
+    }
+
+    document.getElementById('message').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
